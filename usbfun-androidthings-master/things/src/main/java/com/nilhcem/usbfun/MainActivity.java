@@ -18,6 +18,13 @@ import android.util.Log;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
+import com.squareup.okhttp.Call;
+import com.squareup.okhttp.Callback;
+import com.squareup.okhttp.MediaType;
+import com.squareup.okhttp.OkHttpClient;
+import com.squareup.okhttp.Request;
+import com.squareup.okhttp.RequestBody;
+import com.squareup.okhttp.Response;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,7 +49,10 @@ public class MainActivity extends Activity {
     private OutputStream outputStream;
     private InputStream inStream;
 
-    String postUrl = "http://192.168.43.4:38176/updateStatus";
+    String postUrl = "http://192.168.43.4:38176/updateStatus/18";
+//    public String postBody="{\"status\":\"1\"}";
+
+    public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     private int sensorValue=0;
 
@@ -166,8 +176,11 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(usbDetachedReceiver, filter);
         try {
-            init();
-        } catch (IOException e) {
+//            postRequest(postUrl,"{}");
+            Log.i("RPI", "about to call pseudo post");
+            pseudoPost();
+//            init();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -222,16 +235,19 @@ public class MainActivity extends Activity {
     }
 
     private void onSerialDataReceived(String data) {
-        sensorValue = Integer.parseInt(data);
-        try {
-            if (outputStream != null) {
-                outputStream.write(sensorValue);
-                Log.i("RPI", "Wrote to output stream.");
+        int newVal = Integer.parseInt(data);
+        if (Math.abs(sensorValue-newVal) >= 10) {
+            String postUrl = "http://192.168.43.4:38176/updateStatus/" + sensorValue;
+            sensorValue=newVal;
+            try {
+                postRequest(postUrl, "{}");
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
-        Log.i(TAG, "Serial data received: " + data);
+
+//        Log.i(TAG, "Serial data received: " + data);
     }
 
     private void stopUsbConnection() {
@@ -247,5 +263,64 @@ public class MainActivity extends Activity {
             serialDevice = null;
             connection = null;
         }
+    }
+
+    void postRequest(String postUrl,String postBody) throws IOException {
+
+        Log.d("RPI", "Making post request.");
+        OkHttpClient client = new OkHttpClient();
+
+        RequestBody body = RequestBody.create(JSON, "");
+
+        Request request = new Request.Builder()
+                .url(postUrl)
+                .get()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onFailure(Request request, IOException e) {
+                System.err.println("problem with request in rpi");
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                Log.d("RPI",response.body().string());
+                Log.d("RPI", "RESPONSE!!!");
+            }
+
+        });
+    }
+
+    public void pseudoPost() {
+//        String url = "http://192.168.43.4:38176/updateStatus/1";
+//        String url = "http://192.168.43.4:38176/";
+
+        OkHttpClient client = new OkHttpClient();
+
+        Request request = new Request.Builder()
+                .url(postUrl)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+
+            @Override
+            public void onFailure(Request request, IOException e) {
+                Log.i("RPI", "FAILURE REQUEST");
+                System.err.println("Failure from call!");
+                e.printStackTrace();
+            }
+
+            @Override
+            public void onResponse(Response response) throws IOException {
+                Log.i("RPI", "onResponse");
+                final String myResponse = response.body().string();
+
+                Log.d("RPI", "ON RESPONSE katy perry:");
+                Log.d("RPI", myResponse);
+
+            }
+        });
     }
 }

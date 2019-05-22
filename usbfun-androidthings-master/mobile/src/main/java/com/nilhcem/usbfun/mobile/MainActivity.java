@@ -144,7 +144,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         okHttpHandler= new OkHttpHandler();
-//        okHttpHandler.execute("http://192.168.56.1:2320/");
 
         mBtn = findViewById(R.id.button);
         mBtn.setOnClickListener(new View.OnClickListener() {
@@ -156,12 +155,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         mTxtView = (TextView)findViewById(R.id.textView);
-
-//        try {
-//            init();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
     }
 
     @Override
@@ -198,78 +191,10 @@ public class MainActivity extends AppCompatActivity {
                 MainActivity.this.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        mTxtView.setText(myResponse);
+                        mTxtView.setText(Integer.parseInt(myResponse));
                     }
                 });
             }
         });
     }
-
-    public void get2(){
-        OkHttpClient client = new OkHttpClient();
-
-        Request request = new Request.Builder()
-                .url("http://192.168.56.1:2320/")
-                .get()
-                .build();
-
-        try{
-            Call call = client.newCall(request);
-
-            Response response = call.execute();
-
-//            System.out.println(response.body().toString());
-
-        }catch(Exception e){
-//            Log.e("MAIN", e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    public void get(){
-        HttpURLConnection urlConnection = null;
-        BufferedReader reader = null;
-        try {
-            URL url = new URL("https://jsonplaceholder.typicode.com/todos/1");
-
-            urlConnection = (HttpURLConnection) url.openConnection();
-            urlConnection.setRequestMethod("GET");
-            urlConnection.connect();
-
-            InputStream inputStream = urlConnection.getInputStream();
-            StringBuffer buffer = new StringBuffer();
-            if (inputStream == null) {
-                // Nothing to do.
-            }
-
-            reader = new BufferedReader(new InputStreamReader(inputStream));
-
-            String line;
-            while ((line = reader.readLine()) != null) {
-                buffer.append(line + "\n");
-            }
-
-            if (buffer.length() == 0) {
-            }
-            String result = buffer.toString();
-            Log.e("MAIN", result);
-            Log.e("MAIN", "Just printed the request result.");
-        } catch (IOException e) {
-            Log.e("Request", "Error ", e);
-        } finally{
-            if (urlConnection != null) {
-                urlConnection.disconnect();
-            }
-            if (reader != null) {
-                try {
-                    reader.close();
-                } catch (final IOException e) {
-                    Log.e("Request", "Error closing stream", e);
-                }
-            }
-        }
-    }
-
-
-
 }

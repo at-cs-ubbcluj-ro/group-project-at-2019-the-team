@@ -17,21 +17,28 @@ app.use(async (ctx, next) => {
     console.log(`${ctx.method} ${ctx.url} ${ctx.response.status} - ${ms}ms`);
 });
 
-const status = 0;
+var sensorValue;
 
 const router = new Router();
 
 router.get('/', ctx => {
-    ctx.response.body = status;
+    console.log("GET");
+    console.log(sensorValue);
+    
+    ctx.response.body = sensorValue;
     ctx.response.status = 200;
 });
 
-router.post('/updateStatus', ctx => {
-    // console.log("ctx: " + JSON.stringify(ctx));
-    const headers = ctx.request.body;
-    // console.log("body: " + JSON.stringify(headers));
-    const newStatus = headers.status;
-    status = newStatus;
+router.get('/updateStatus/:nr', ctx => {
+    console.log("/updateStatus");
+
+    const headers = ctx.params;
+    console.log(headers.nr);
+    
+    console.log("ctx: " + JSON.stringify(ctx));
+    console.log("body: " + JSON.stringify(headers));
+    sensorValue = parseInt(headers.nr);
+    ctx.response.status = 200;
 });
 
 app.use(router.routes());
