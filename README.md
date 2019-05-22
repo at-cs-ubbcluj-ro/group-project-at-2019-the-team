@@ -2,8 +2,8 @@ Please use this repository to maintain your work for the team project.
 
 Also please fill the following details:
 
-- Team name:
-- Students (SCS username - Name):
+- Team name: The Team
+- Students (SCS username - Name): Nicole Dolot, Bianca Dragomir, Imola Dezsi, Chadi Ayachi, Lucia Alonso
 
 Project idea:
 
