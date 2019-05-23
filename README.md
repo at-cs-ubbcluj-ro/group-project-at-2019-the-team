@@ -13,6 +13,9 @@ The communication between the RPI and the companion app is done through a server
 Website:
 https://noisemonitoringproject.000webhostapp.com/?fbclid=IwAR0c4AgYm_AyQa9f2ZVpkBjNoDeotFGBU1WtNBtgszk0wKp2yIopiouXKxE
 
+Video:
+https://youtu.be/BmtGRhyrGeI
+
 =============
 
 Due: last laboratory.
