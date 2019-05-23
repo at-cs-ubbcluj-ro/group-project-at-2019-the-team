@@ -7,13 +7,14 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView"
-        />
+        android:text="NOiCe level"
+        android:textSize="36sp" />
 
     <Button
         android:id="@+id/button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Button" />
+        android:layout_width="155dp"
+        android:layout_height="77dp"
+        android:background="#4CAF50"
+        android:text="N00IZZZ" />
 
 </LinearLayout>

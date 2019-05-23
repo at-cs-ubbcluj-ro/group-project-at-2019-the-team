@@ -1,10 +1,6 @@
 package com.nilhcem.usbfun;
 
 import android.app.Activity;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothSocket;
-import android.bluetooth.le.BluetoothLeScanner;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -13,12 +9,10 @@ import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbDeviceConnection;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
-import android.os.ParcelUuid;
 import android.util.Log;
 
 import com.felhr.usbserial.UsbSerialDevice;
 import com.felhr.usbserial.UsbSerialInterface;
-import com.squareup.okhttp.Call;
 import com.squareup.okhttp.Callback;
 import com.squareup.okhttp.MediaType;
 import com.squareup.okhttp.OkHttpClient;
@@ -27,13 +21,8 @@ import com.squareup.okhttp.RequestBody;
 import com.squareup.okhttp.Response;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Set;
 
 public class MainActivity extends Activity {
 
@@ -46,89 +35,11 @@ public class MainActivity extends Activity {
     private UsbSerialDevice serialDevice;
     private String buffer = "";
 
-    private OutputStream outputStream;
-    private InputStream inStream;
-
     String postUrl = "http://192.168.43.4:38176/updateStatus/18";
-//    public String postBody="{\"status\":\"1\"}";
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     private int sensorValue=0;
-
-    private void init() throws IOException {
-        BluetoothAdapter blueAdapter = BluetoothAdapter.getDefaultAdapter();
-        if (blueAdapter != null) {
-            if (blueAdapter.isEnabled()) {
-                Set<BluetoothDevice> bondedDevices = blueAdapter.getBondedDevices();
-                int index=0;
-                int myDevice = 0;
-                for (BluetoothDevice bd: bondedDevices)
-                {
-                    Log.i("RPI", "Paired device: " + bd.getName());
-                    if (bd.getName().equals("k")) myDevice = index;
-                    index++;
-
-                }
-
-                if(bondedDevices.size() > 0) {
-                    Log.i("RPI","Trying to connect to target device.");
-                    Object[] devices = (Object []) bondedDevices.toArray();
-                    BluetoothDevice device = (BluetoothDevice) devices[myDevice];
-                    ParcelUuid[] uuids = device.getUuids();
-                    BluetoothSocket socket = device.createRfcommSocketToServiceRecord(uuids[0].getUuid());
-                    Class<?> clazz = socket.getRemoteDevice().getClass();
-                    Class<?>[] paramTypes = new Class<?>[] {Integer.TYPE};
-
-                    Method m = null;
-                    try {
-                        m = clazz.getMethod("createRfcommSocket", paramTypes);
-                    } catch (NoSuchMethodException e) {
-                        e.printStackTrace();
-                    }
-                    Object[] params = new Object[] {Integer.valueOf(1)};
-
-                    BluetoothSocket fallbackSocket = null;
-                    try {
-                        fallbackSocket = (BluetoothSocket) m.invoke(socket.getRemoteDevice(), params);
-                    } catch (IllegalAccessException e) {
-                        e.printStackTrace();
-                    } catch (InvocationTargetException e) {
-                        e.printStackTrace();
-                    }
-                    fallbackSocket.connect();
-//                    socket.connect();
-                    outputStream = socket.getOutputStream();
-                    Log.i("RPI", "Output stream: " + outputStream.toString());
-                    inStream = socket.getInputStream();
-
-                }
-
-                Log.e("error", "No appropriate paired devices.");
-            } else {
-                Log.e("error", "Bluetooth is disabled.");
-            }
-        }
-    }
-
-    public void write(String s) throws IOException {
-        outputStream.write(s.getBytes());
-    }
-
-    public void run() {
-        final int BUFFER_SIZE = 1024;
-        byte[] buffer = new byte[BUFFER_SIZE];
-        int bytes = 0;
-        int b = BUFFER_SIZE;
-
-        while (true) {
-            try {
-                bytes = inStream.read(buffer, bytes, BUFFER_SIZE - bytes);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
 
     private UsbSerialInterface.UsbReadCallback callback = new UsbSerialInterface.UsbReadCallback() {
         @Override
@@ -176,10 +87,8 @@ public class MainActivity extends Activity {
         IntentFilter filter = new IntentFilter(UsbManager.ACTION_USB_DEVICE_DETACHED);
         registerReceiver(usbDetachedReceiver, filter);
         try {
-//            postRequest(postUrl,"{}");
-            Log.i("RPI", "about to call pseudo post");
-            pseudoPost();
-//            init();
+            Log.i("RPI", "About to send sensor value to the server.");
+            sendSensorValue();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -240,14 +149,12 @@ public class MainActivity extends Activity {
             String postUrl = "http://192.168.43.4:38176/updateStatus/" + sensorValue;
             sensorValue=newVal;
             try {
-                postRequest(postUrl, "{}");
+                postRequest(postUrl);
 
             } catch (Exception e) {
                 e.printStackTrace();
             }
         }
-
-//        Log.i(TAG, "Serial data received: " + data);
     }
 
     private void stopUsbConnection() {
@@ -265,7 +172,7 @@ public class MainActivity extends Activity {
         }
     }
 
-    void postRequest(String postUrl,String postBody) throws IOException {
+    void postRequest(String postUrl) throws IOException {
 
         Log.d("RPI", "Making post request.");
         OkHttpClient client = new OkHttpClient();
@@ -281,22 +188,19 @@ public class MainActivity extends Activity {
 
             @Override
             public void onFailure(Request request, IOException e) {
-                System.err.println("problem with request in rpi");
+                System.err.println("Problem with request in RPI.");
             }
 
             @Override
             public void onResponse(Response response) throws IOException {
                 Log.d("RPI",response.body().string());
-                Log.d("RPI", "RESPONSE!!!");
+                Log.d("RPI", "RESPONSE!");
             }
 
         });
     }
 
-    public void pseudoPost() {
-//        String url = "http://192.168.43.4:38176/updateStatus/1";
-//        String url = "http://192.168.43.4:38176/";
-
+    public void sendSensorValue() {
         OkHttpClient client = new OkHttpClient();
 
         Request request = new Request.Builder()
