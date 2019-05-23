@@ -8,6 +8,7 @@ Also please fill the following details:
 Project idea:
 
 Get the noise level using a microphone connected to an Arduino, which in turn is connected to RPI. Show the noise level received by the RPI from the sensor on a companion app, whenever it is requested.
+The communication between the RPI and the companion app is done through a server.
 
 Website:
 https://noisemonitoringproject.000webhostapp.com/?fbclid=IwAR0c4AgYm_AyQa9f2ZVpkBjNoDeotFGBU1WtNBtgszk0wKp2yIopiouXKxE
